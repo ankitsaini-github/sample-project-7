@@ -5,6 +5,8 @@ import './App.css';
 import Loader from './components/Loader';
 import AddMovie from './components/AddMovie';
 
+const URL='https://react-http-2265-default-rtdb.asia-southeast1.firebasedatabase.app/movies.json';
+
 function App() {
   const [movies, setMovies] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -16,53 +18,61 @@ function App() {
     setIsLoading(true);
     setretry(true)
     setError(null);
-    let success=false
-    let count=0
-    while(!success && count<3){
+    // let success=false
+    // let count=0
+    // while(!success && count<3){
     console.log('fetching ....')
     try {
-      const response = await fetch('https://swapi.dev/api/films/');
+      const response = await fetch(URL);
       if (!response.ok) {
         console.log('got error ....')
         throw new Error('Something went wrong!');
       }
   
 
-      console.log('data ....')
       const data = await response.json();
-      const transformedMovies = data.results.map((movieData) => {
-        return {
-          id: movieData.episode_id,
-          title: movieData.title,
-          openingText: movieData.opening_crawl,
-          releaseDate: movieData.release_date,
-        };
-      });
-      setMovies(transformedMovies);
-      success=true
+      
+      const loadedMovies = [];
+
+      for (const key in data) {
+        loadedMovies.push({
+          id: key,
+          title: data[key].title,
+          openingText: data[key].openingText,
+          releaseDate: data[key].releaseDate,
+        });
+      }
+      setMovies(loadedMovies);
+      // success=true
+
     } catch (error) {
       setError(error.message);
-      console.log(`Error: xxx . Retrying in 5 seconds...`);
-      await new Promise(res=>setTimeout(res,5000))
-      console.log('restarttttttt')
-      count++;
+      // await new Promise(res=>setTimeout(res,5000))
+      // count++;
     }
-  }
+  // }
     setIsLoading(false);
   }, []);
   
   useEffect(() => {
-    console.log('useeffect....')
     fetchMoviesHandler();
   }, [fetchMoviesHandler]);
 
   const cancelrequest=()=>{
-    console.log('exit....')
     setretry(false)
   }
 
-  function addMovieHandler(movie) {
-    console.log(movie);
+  async function addMovieHandler(movie) {
+    console.log('sending post req...');
+    const response = await fetch(URL,{
+      method:'POST',
+      body: JSON.stringify(movie),
+      headers:{
+        'Content-Type' : 'application/json'
+      }
+    })
+    const data = await response.json();
+    console.log('added : ',data);
   }
   
   return (
