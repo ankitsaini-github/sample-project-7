@@ -5,7 +5,7 @@ import './App.css';
 import Loader from './components/Loader';
 import AddMovie from './components/AddMovie';
 
-const URL='https://react-http-2265-default-rtdb.asia-southeast1.firebasedatabase.app/movies.json';
+const URL='https://react-http-2265-default-rtdb.asia-southeast1.firebasedatabase.app/';
 
 function App() {
   const [movies, setMovies] = useState([]);
@@ -23,7 +23,7 @@ function App() {
     // while(!success && count<3){
     console.log('fetching ....')
     try {
-      const response = await fetch(URL);
+      const response = await fetch(`${URL}movies.json`);
       if (!response.ok) {
         console.log('got error ....')
         throw new Error('Something went wrong!');
@@ -64,17 +64,46 @@ function App() {
 
   async function addMovieHandler(movie) {
     console.log('sending post req...');
-    const response = await fetch(URL,{
-      method:'POST',
-      body: JSON.stringify(movie),
-      headers:{
-        'Content-Type' : 'application/json'
+    try{
+      const response = await fetch(`${URL}movies.json`,{
+        method:'POST',
+        body: JSON.stringify(movie),
+        headers:{
+          'Content-Type' : 'application/json'
+        }
+      })
+      if(!response.ok){
+        console.log('got error ....')
+        throw new Error('Something went wrong!');
       }
-    })
-    const data = await response.json();
-    console.log('added : ',data);
+      const data = await response.json();
+      console.log('added : ',data);
+      fetchMoviesHandler();
+
+    }
+    catch(error){
+      setError(error)
+    }
   }
   
+  async function deleteMovieHandler(id){
+    console.log('deleteing ...')
+    try{
+      const response = await fetch(`${URL}movies/${id}.json`,{
+        method:'DELETE'
+      })
+      if (!response.ok) {
+        console.log('got error ....')
+        throw new Error('Something went wrong!');
+      }
+      fetchMoviesHandler();
+
+    }
+    catch(error){
+      setError(error)
+    }
+    
+  }
   return (
     <React.Fragment>
       <section>
@@ -84,7 +113,7 @@ function App() {
         <button onClick={fetchMoviesHandler}>{isLoading && <>Loading Movies...</>} {!isLoading && <>Fetch Movies</>}</button>
       </section>
       <section>
-      {!isLoading && movies.length > 0 && <MoviesList movies={movies} />}
+      {!isLoading && movies.length > 0 && <MoviesList movies={movies} onDeleteMovie={deleteMovieHandler}/>}
         {!isLoading && movies.length === 0 && <p>Found no movies.</p>}
         {isLoading && <Loader/>}
         {error && <span>{error}{retry && <span>...Retrying <button onClick={cancelrequest}>Cancel</button></span>}</span>}
